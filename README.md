@@ -24,3 +24,19 @@ This capstone project investigates earthquake patterns in Morocco and worldwide 
 
 - Python (Jupyter Notebooks / Anaconda)
 - Libraries: `pandas`, `numpy`, `matplotlib`, `seaborn`, `sklearn`, `tensorflow`, `keras`, `geopandas`, `shapely`
+
+---
+
+## Models Used
+
+- **KNN**: Classification of earthquake magnitude ranges using neighborhood-based learning.
+- **Random Forest**: Regression model for predicting continuous earthquake magnitudes using ensemble decision trees.
+- **LSTM**: Time-series model capturing sequential dependencies in magnitude data using Long Short-Term Memory networks.
+
+---
+
+## Results
+
+- **Random Forest** performed well in predicting continuous magnitude values with lower error and good generalization.
+- **LSTM** effectively captured time-dependence in the data, achieving acceptable Root Mean Square Error (RMSE).
+- **KNN** was less accurate overall, especially for underrepresented magnitude classes, but served as a baseline classifier.
