@@ -4,7 +4,7 @@ This capstone project investigates earthquake patterns in Morocco and worldwide 
 
 ---
 
-## 📌 Project Goals
+## Project Goals
 
 - Analyze and visualize global and Moroccan earthquake data.
 - Preprocess and clean historical data for robust machine learning input.
@@ -13,14 +13,14 @@ This capstone project investigates earthquake patterns in Morocco and worldwide 
 
 ---
 
-## 📊 Datasets
+## Datasets
 
 - **Global Dataset**: Sourced from the USGS via Kaggle, spanning 1906 to 2022 with 283,132 seismic records. Due to size, the dataset is hosted externally: https://drive.google.com/file/d/1nCuffIRP_PvQUzrsZqy8tn6-CaBBcKrf/view?usp=sharing 
 - **Moroccan Dataset**: Collected in collaboration with the Institut National de Géophysique (ING), spanning 1900 to 2023 with 65,931 records.
 
 ---
 
-## 🛠️ Tools and Libraries
+## Tools and Libraries
 
 - Python (Jupyter Notebooks / Anaconda)
 - Libraries: `pandas`, `numpy`, `matplotlib`, `seaborn`, `sklearn`, `tensorflow`, `keras`, `geopandas`, `shapely`
