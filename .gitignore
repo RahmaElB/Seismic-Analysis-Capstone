@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.eggs/
+
+# Environments
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Large data files (hosted externally)
+data/Global_Earthquake_Data22.csv
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

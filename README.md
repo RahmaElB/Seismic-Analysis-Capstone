@@ -1,42 +1,139 @@
-# Seismic Data Analysis in Morocco
+# Seismic Analysis Capstone
 
-This capstone project investigates earthquake patterns in Morocco and worldwide using machine learning and deep learning models. It was developed in response to the devastating September 2023 earthquake in Morocco and aims to improve seismic monitoring and preparedness through AI tools and predictive modeling.
-
----
-
-## Project Goals
-
-- Analyze and visualize global and Moroccan earthquake data.
-- Preprocess and clean historical data for robust machine learning input.
-- Build and evaluate models (KNN, Random Forest, LSTM) to classify or forecast earthquake magnitudes.
-- Provide real-time insights and recommendations based on data patterns.
+Machine learning analysis of Moroccan earthquake patterns (1901–2023), developed as a bachelor thesis in response to the devastating September 2023 Al Haouz earthquake (M6.8). The project applies KNN, Random Forest, and LSTM models to a historical seismic catalog to classify and forecast earthquake magnitudes.
 
 ---
 
-## Datasets
+## Context
 
-- **Global Dataset**: Sourced from the USGS via Kaggle, spanning 1906 to 2022 with 283,132 seismic records. Due to size, the dataset is hosted externally: https://drive.google.com/file/d/1nCuffIRP_PvQUzrsZqy8tn6-CaBBcKrf/view?usp=sharing 
-- **Moroccan Dataset**: Collected in collaboration with the Institut National de Géophysique (ING), spanning 1900 to 2023 with 65,931 records.
-
----
-
-## Tools and Libraries
-
-- Python (Jupyter Notebooks / Anaconda)
-- Libraries: `pandas`, `numpy`, `matplotlib`, `seaborn`, `sklearn`, `tensorflow`, `keras`, `geopandas`, `shapely`
+On September 8, 2023, a 6.8 magnitude earthquake struck Al Haouz Province in Morocco, killing over 2,900 people. This project was motivated by that event and uses earthquake data collected in collaboration with the **Institut National de Géophysique (ING)** alongside the global USGS catalog to analyze seismic patterns and evaluate machine learning approaches for magnitude prediction.
 
 ---
 
-## Models Used
+## Dataset
 
-- **KNN**: Classification of earthquake magnitude ranges using neighborhood-based learning.
-- **Random Forest**: Regression model for predicting continuous earthquake magnitudes using ensemble decision trees.
-- **LSTM**: Time-series model capturing sequential dependencies in magnitude data using Long Short-Term Memory networks.
+| Dataset | Source | Records | Period |
+|---------|--------|---------|--------|
+| Moroccan catalog | Institut National de Géophysique (ING) | 65,578 (after cleaning) | 1901–2023 |
+| Global catalog | USGS via Kaggle | 283,132 | 1906–2022 |
+
+The Moroccan dataset (`cleaned_earthquake_data.csv`) is included in this repository. The global dataset is hosted externally due to size: [Google Drive link](https://drive.google.com/file/d/1nCuffIRP_PvQUzrsZqy8tn6-CaBBcKrf/view?usp=sharing).
+
+**Data quality issues identified and corrected:**
+- 2 rows with corrupt longitude values (−571, −4,251) — removed
+- 1 future-dated record (year = 2110) — removed
+- 338 rows with negative magnitudes (catalog noise) — removed
+- 1 depth outlier beyond 2,000 km — removed
 
 ---
 
-## Results
+## Project Structure
 
-- **Random Forest** performed well in predicting continuous magnitude values with lower error and good generalization.
-- **LSTM** effectively captured time-dependence in the data, achieving acceptable Root Mean Square Error (RMSE).
-- **KNN** was less accurate overall, especially for underrepresented magnitude classes, but served as a baseline classifier.
+```
+Seismic-Analysis-Capstone/
+├── notebooks/
+│   ├── 01_data_exploration.ipynb     # EDA, cleaning, spatial/temporal analysis
+│   └── 02_model_comparison.ipynb     # KNN, Random Forest, LSTM training & evaluation
+├── data/
+│   └── cleaned_earthquake_data.csv   # Moroccan dataset (ING)
+├── figures/                          # Generated plots (auto-created when notebooks run)
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## Models & Results
+
+### K-Nearest Neighbors — Magnitude Classification
+
+Classifies earthquakes into five magnitude classes: Micro (0–2), Minor (2–3), Light (3–4), Moderate (4–5), Strong (5+).
+
+| Metric | Score |
+|--------|-------|
+| Test accuracy | **72.8%** |
+| Best k | 7 |
+| Weighting | distance |
+
+KNN performs well on the dominant classes (Micro: F1 = 0.86) but struggles on rare high-magnitude events, a known consequence of class imbalance (strong events: < 0.2% of records). This reflects the Gutenberg-Richter law — smaller earthquakes are exponentially more frequent.
+
+### Random Forest — Magnitude Regression
+
+Predicts continuous Richter magnitude using spatial and temporal features.
+
+| Metric | Score |
+|--------|-------|
+| RMSE | **0.718** |
+| MAE | **0.490** |
+| R² | **0.511** |
+
+Feature importance analysis revealed that `year` (0.333) and geographic coordinates (`longitude` 0.202, `latitude` 0.193) are the strongest predictors — suggesting that long-term catalog improvements and regional tectonic patterns drive predictability more than short-term temporal features.
+
+### LSTM — Time-Series Forecasting
+
+Forecasts daily mean magnitude from 60-day sliding windows of historical observations. Captures temporal autocorrelation in seismic sequences (aftershock decay, seasonal clustering).
+
+| Metric | Score |
+|--------|-------|
+| RMSE | **~0.41** |
+| MAE | **~0.32** |
+| Architecture | LSTM(64) → Dropout(0.2) → LSTM(32) → Dense(1) |
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/RahmaElB/Seismic-Analysis-Capstone.git
+cd Seismic-Analysis-Capstone
+```
+
+### 2. Install dependencies
+
+```bash
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 3. Run the notebooks
+
+```bash
+jupyter notebook
+```
+
+Open and run in order:
+1. `notebooks/01_data_exploration.ipynb` — EDA and cleaning
+2. `notebooks/02_model_comparison.ipynb` — model training and evaluation
+
+Figures are saved to `figures/` automatically.
+
+---
+
+## Key Findings
+
+- **Random Forest** is the best-performing model for point-in-time magnitude regression. The dominance of `year` as a predictor reflects historical catalog sparsity before ~1980 — modern seismometer networks detect more low-magnitude events, making year a proxy for detection threshold rather than true seismicity increase.
+
+- **LSTM** successfully captures temporal dependencies but is limited by the low-information density of daily mean magnitude — many days have only micro-events. A per-event sequence model (as opposed to resampled time series) would likely improve this.
+
+- **Class imbalance** is the primary challenge for KNN. The dataset follows the Gutenberg-Richter law: for every unit increase in magnitude, the number of events decreases by roughly an order of magnitude. Future work could apply SMOTE oversampling or cost-sensitive learning to improve recall on higher-magnitude classes.
+
+---
+
+## Tools & Libraries
+
+Python · Jupyter · pandas · NumPy · scikit-learn · TensorFlow/Keras · matplotlib · seaborn
+
+---
+
+## Related Work
+
+This project was extended into a full MLOps pipeline in [seismic-mlops](https://github.com/RahmaElB/seismic-mlops), which adds MLflow experiment tracking, a FastAPI serving layer, Docker containerization, and a model registry with versioning.
+
+---
+
+## Acknowledgements
+
+Seismic catalog data provided by the Institut National de Géophysique (ING), Morocco. Global dataset sourced from the USGS Earthquake Hazards Program via Kaggle.
