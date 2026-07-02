@@ -20,10 +20,10 @@ On September 8, 2023, a 6.8 magnitude earthquake struck Al Haouz Province in Mor
 The Moroccan dataset (`cleaned_earthquake_data.csv`) is included in this repository. The global dataset is hosted externally due to size: [Google Drive link](https://drive.google.com/file/d/1nCuffIRP_PvQUzrsZqy8tn6-CaBBcKrf/view?usp=sharing).
 
 **Data quality issues identified and corrected:**
-- 2 rows with corrupt longitude values (−571, −4,251) — removed
-- 1 future-dated record (year = 2110) — removed
-- 338 rows with negative magnitudes (catalog noise) — removed
-- 1 depth outlier beyond 2,000 km — removed
+- 2 rows with corrupt longitude values (−571, −4,251): removed
+- 1 future-dated record (year = 2110): removed
+- 338 rows with negative magnitudes (catalog noise): removed
+- 2 depth outliers beyond 2,000 km: removed
 
 ---
 
@@ -45,39 +45,40 @@ Seismic-Analysis-Capstone/
 
 ## Models & Results
 
-### K-Nearest Neighbors — Magnitude Classification
+### K-Nearest Neighbors: Magnitude Classification
 
 Classifies earthquakes into five magnitude classes: Micro (0–2), Minor (2–3), Light (3–4), Moderate (4–5), Strong (5+).
 
 | Metric | Score |
 |--------|-------|
-| Test accuracy | **72.8%** |
-| Best k | 7 |
+| Test accuracy | **73.6%** |
+| Best k | 11 |
 | Weighting | distance |
 
-KNN performs well on the dominant classes (Micro: F1 = 0.86) but struggles on rare high-magnitude events, a known consequence of class imbalance (strong events: < 0.2% of records). This reflects the Gutenberg-Richter law — smaller earthquakes are exponentially more frequent.
+KNN performs well on the dominant classes (Micro: F1 = 0.86) but struggles on rare high-magnitude events, a known consequence of class imbalance (strong events: < 0.2% of records). This reflects the Gutenberg-Richter law, smaller earthquakes are exponentially more frequent.
 
-### Random Forest — Magnitude Regression
+### Random Forest: Magnitude Regression
 
 Predicts continuous Richter magnitude using spatial and temporal features.
 
 | Metric | Score |
 |--------|-------|
-| RMSE | **0.718** |
-| MAE | **0.490** |
-| R² | **0.511** |
+| RMSE | **0.717** |
+| MAE | **0.489** |
+| R² | **0.512** |
 
 Feature importance analysis revealed that `year` (0.333) and geographic coordinates (`longitude` 0.202, `latitude` 0.193) are the strongest predictors — suggesting that long-term catalog improvements and regional tectonic patterns drive predictability more than short-term temporal features.
 
-### LSTM — Time-Series Forecasting
+### LSTM: Time-Series Forecasting
 
-Forecasts daily mean magnitude from 60-day sliding windows of historical observations. Captures temporal autocorrelation in seismic sequences (aftershock decay, seasonal clustering).
+Forecasts daily mean magnitude from 60-day sliding windows of historical observations. Captures temporal autocorrelation in seismic sequences (aftershock decay, seasonal clustering). Early stopping triggered at epoch 8 (best weights from epoch 3).
 
 | Metric | Score |
 |--------|-------|
-| RMSE | **~0.41** |
-| MAE | **~0.32** |
+| RMSE | **0.475** |
+| MAE | **0.314** |
 | Architecture | LSTM(64) → Dropout(0.2) → LSTM(32) → Dense(1) |
+| Epochs trained | 8 (early stopping) |
 
 ---
 
@@ -105,8 +106,8 @@ jupyter notebook
 ```
 
 Open and run in order:
-1. `notebooks/01_data_exploration.ipynb` — EDA and cleaning
-2. `notebooks/02_model_comparison.ipynb` — model training and evaluation
+1. `notebooks/01_data_exploration.ipynb`: EDA and cleaning
+2. `notebooks/02_model_comparison.ipynb`: model training and evaluation
 
 Figures are saved to `figures/` automatically.
 
@@ -114,11 +115,13 @@ Figures are saved to `figures/` automatically.
 
 ## Key Findings
 
-- **Random Forest** is the best-performing model for point-in-time magnitude regression. The dominance of `year` as a predictor reflects historical catalog sparsity before ~1980 — modern seismometer networks detect more low-magnitude events, making year a proxy for detection threshold rather than true seismicity increase.
+- **LSTM achieved the lowest error** on the time-series forecasting task (RMSE = 0.475, MAE = 0.314), converging quickly in just 8 epochs with early stopping. This reflects the strong temporal autocorrelation in daily seismic activity, aftershock sequences produce predictable short-term magnitude patterns.
 
-- **LSTM** successfully captures temporal dependencies but is limited by the low-information density of daily mean magnitude — many days have only micro-events. A per-event sequence model (as opposed to resampled time series) would likely improve this.
+- **Random Forest** is the strongest model for point-in-time magnitude regression (RMSE = 0.717, R² = 0.512). The dominance of `year` as a predictor reflects historical catalog sparsity before ~1980 — modern seismometer networks detect more low-magnitude events, making year a proxy for detection threshold rather than true seismicity increase.
 
-- **Class imbalance** is the primary challenge for KNN. The dataset follows the Gutenberg-Richter law: for every unit increase in magnitude, the number of events decreases by roughly an order of magnitude. Future work could apply SMOTE oversampling or cost-sensitive learning to improve recall on higher-magnitude classes.
+- **Class imbalance** is the primary challenge for KNN (73.6% accuracy). The dataset follows the Gutenberg-Richter law: for every unit increase in magnitude, the number of events decreases by roughly an order of magnitude. Micro-events (0–2) make up 54.3% of the catalog; strong events (5+) only 0.2%. Future work could apply SMOTE oversampling or cost-sensitive learning to improve recall on higher-magnitude classes.
+
+- **94.7% of earthquakes are shallow** (depth < 70 km), consistent with the tectonic setting of Morocco at the convergent boundary between the African and Eurasian plates.
 
 ---
 
